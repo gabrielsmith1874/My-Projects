@@ -1,0 +1,12 @@
+#JSGF V1.0;
+
+/**
+ * JSGF Grammar 
+ */
+
+grammar grammar;
+
+public <directions> = (north | south | east | west);
+public <actions> = (inventory | look | take bird | take chest | drop bird | drop chest | quit | grab | help | commands | instructions | save | load);
+public <items> =  (bird | chest);
+public <numbers> = (one | two | three | four | five | six | seven | eight | nine | ten | eleven | twelve | thirteen | fourteen | fifteen | sixteen | seventeen | eighteen | nineteen | twenty);
