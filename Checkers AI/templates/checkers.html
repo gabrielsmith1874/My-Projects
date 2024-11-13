@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkers Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .game-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            gap: 1px;
+            background-color: #333;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .cell.light {
+            background-color: #f0d9b5;
+        }
+
+        .cell.dark {
+            background-color: #b58863;
+        }
+
+        .piece {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .piece.red {
+            background-color: #dc3545;
+            border: 2px solid #b02a37;
+        }
+
+        .piece.black {
+            background-color: #212529;
+            border: 2px solid #000;
+        }
+
+        .piece.king::after {
+            content: "♔";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: 24px;
+        }
+
+        .cell.highlighted {
+            background-color: #90EE90;
+        }
+
+        .cell.selected {
+            background-color: #FFD700;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Checkers Game</h1>
+        <div id="status" class="status">Your turn (Black)</div>
+        <div class="board" id="board"></div>
+        <div class="controls">
+            <button id="new-game-button">New Game</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedCell = null;
+        let possibleMoves = [];
+
+        function createBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+
+            for (let i = 0; i < 8; i++) {
+                for (let j = 0; j < 8; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = `cell ${(i + j) % 2 === 0 ? 'light' : 'dark'}`;
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.addEventListener('click', handleCellClick);
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        async function fetchAndRedrawBoard() {
+            const response = await fetch('/api/get-board');
+            const gameState = await response.json();
+            redrawBoard(gameState);
+        }
+
+        // Call this function whenever you need to redraw the board
+        fetchAndRedrawBoard();
+
+        function redrawBoard(gameState) {
+            const board = gameState['board'];
+            const cells = document.querySelectorAll('.cell');
+
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                cell.innerHTML = '';
+
+                const piece = board[row][col];
+                if (piece !== '.') {
+                    const pieceDiv = document.createElement('div');
+                    pieceDiv.className = `piece ${piece.toLowerCase() === 'r' ? 'red' : 'black'}`;
+                    if (piece === piece.toUpperCase()) {
+                        pieceDiv.classList.add('king');
+                    }
+                    cell.appendChild(pieceDiv);
+                }
+            });
+        }
+
+        function updateBoard(boardData) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                cell.innerHTML = '';
+
+                const piece = boardData[row][col];
+                if (piece !== '.') {
+                    const pieceDiv = document.createElement('div');
+                    pieceDiv.className = `piece ${piece.toLowerCase() === 'r' ? 'red' : 'black'}`;
+                    if (piece === piece.toUpperCase()) {
+                        pieceDiv.classList.add('king');
+                    }
+                    cell.appendChild(pieceDiv);
+                }
+            });
+        }
+
+        function handleCellClick(event) {
+            const cell = event.currentTarget;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            if (selectedCell === null) {
+                // First click - select piece
+                if (hasPiece(cell, 'black')) {
+                    selectCell(cell);
+                }
+            } else {
+                // Second click - make move
+                const startRow = parseInt(selectedCell.dataset.row);
+                const startCol = parseInt(selectedCell.dataset.col);
+
+                makeMove([startRow, startCol], [row, col]);
+                clearSelection();
+            }
+        }
+
+        function selectCell(cell) {
+            clearSelection();
+            cell.classList.add('selected');
+            selectedCell = cell;
+            highlightPossibleMoves(cell);
+        }
+
+        function clearSelection() {
+            if (selectedCell) {
+                selectedCell.classList.remove('selected');
+                selectedCell = null;
+            }
+            clearHighlights();
+        }
+
+        function clearHighlights() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('highlighted');
+            });
+        }
+
+        function hasPiece(cell, color) {
+            const piece = cell.querySelector('.piece');
+            return piece && piece.classList.contains(color);
+        }
+
+        function highlightPossibleMoves(cell) {
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+
+            possibleMoves.forEach(move => {
+                if (move[row][col] === '.') {
+                    const targetCells = document.querySelectorAll('.cell');
+                    targetCells.forEach(targetCell => {
+                        const targetRow = parseInt(targetCell.dataset.row);
+                        const targetCol = parseInt(targetCell.dataset.col);
+                        if (move[targetRow][targetCol] === 'b' || move[targetRow][targetCol] === 'B') {
+                            targetCell.classList.add('highlighted');
+                        }
+                    });
+                }
+            });
+        }
+
+        async function makeMove(startPos, endPos) {
+            const response = await fetch('/api/move', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ from: startPos, to: endPos })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            updateBoard(data.board);
+
+            if (data.gameOver) {
+                document.getElementById('status').textContent = 'Game Over!';
+            }
+
+            await updateGameState();
+        }
+        async function updateGameState() {
+            const response = await fetch('/api/state');
+            const data = await response.json();
+
+            updateBoard(data.board);
+            possibleMoves = data.possibleMoves;
+
+            if (data.gameOver) {
+                document.getElementById('status').textContent = 'Game Over!';
+            } else {
+                document.getElementById('status').textContent =
+                    data.currentPlayer === 'r' ? 'Your turn (Red)' : 'AI thinking...';
+            }
+        }
+
+        async function newGame() {
+            await fetch('/api/new-game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            await updateGameState();
+            clearSelection();
+        }
+
+        document.getElementById('new-game-button').addEventListener('click', newGame);
+
+        // Initialize the game
+        createBoard();
+        updateGameState();
+    </script>
+</body>
+</html>

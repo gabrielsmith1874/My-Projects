@@ -124,9 +124,9 @@ def copy_board(board):
 
 def get_possible_moves(state, player):
     """
-    >>> board = [['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', 'b', '.', '.', '.'], ['.', '.', '.', '.', '.', 'r', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.']]
+    >>> board = [['.', 'r', '.', 'r', '.', 'r', '.', 'r'], ['r', '.', 'r', '.', 'r', '.', 'r', '.'], ['.', 'r', '.', 'r', '.', 'r', '.', 'r'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['.', '.', '.', '.', '.', '.', '.', '.'], ['b', '.', 'b', '.', 'b', '.', 'b', '.'], ['.', 'b', '.', 'b', '.', 'b', '.', 'b'], ['b', '.', 'b', '.', 'b', '.', 'b', '.']]
     >>> state = State(board)
-    >>> get_possible_moves(state, 'r')
+    >>> get_possible_moves(state, 'b')
 
     :param state:
     :param player:
@@ -164,7 +164,6 @@ def get_possible_moves(state, player):
             new_i, new_j = i + di, j + dj
             if 0 <= new_i < 8 and 0 <= new_j < 8 and cur_board[new_i][new_j] == '.':
                 add_move(regular_moves, cur_board, i, j, new_i, new_j, piece)
-
     return regular_moves
 
 def check_opponent(color, piece):
