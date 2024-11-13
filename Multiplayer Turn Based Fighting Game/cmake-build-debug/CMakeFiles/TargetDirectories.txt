@@ -1,0 +1,3 @@
+C:/Users/gabri/Documents/CSC209/a4/cmake-build-debug/CMakeFiles/a4.dir
+C:/Users/gabri/Documents/CSC209/a4/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/gabri/Documents/CSC209/a4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
