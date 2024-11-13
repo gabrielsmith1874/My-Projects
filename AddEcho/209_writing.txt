@@ -1,0 +1,55 @@
+NAME
+	addecho - add an echo effect to a mono WAV audio file
+
+SYNOPSIS
+	addecho [-d  delay] [-v volume_scale] sourvewav destwav
+
+DESCRIPTION
+	addecho takes in an existing WAV file and creates a new WAV file that is the original WAV file with echo added
+	to it. The WAV files that the program operates on have a sampling rate of 22050 Hz. The echo effect is added 
+	by blending the original sound with a delayed, volume-scaled version of itself. There are 2 parameters which 
+	control the echo effect:
+
+	delay: specifies how many samples to wait before mixing the echoing copy of the audio with the original copy of
+	the audio. Since the WAV files operated on have a sampling rate of 22050, a delay of x will cause the echo to 
+	start x / 22050 seconds after the sound starts. If a value is not provided, a default value of 8000 is used. 
+
+	volume_scale: Determines the amount by which to scale down the volume of the echoing copy of the audio. If a 
+	value is not provided, a default value of 4 is used.
+
+	Unlike other methods that require loading the entire audio files into memory, addecho is optimized in the way
+	that it keeps only the most recent delay samples of the volume-scaled original audio in an echo buffer. This
+	optimization lets addecho efficiently handle potentially large audio files.
+
+	The resulting file will contain the echo effect and have the same number of samples as the echoing copy.
+
+RETURN VALUES
+	addecho returns the following values:
+
+	0 if the echo effect was successfully added to the resulting WAV audio file.
+
+	1 if an error occured while executing the program.
+
+EXAMPLES
+	To add an echo effect with a delay of 6900 samples and a volume scale of 2 to LastChristmas.wav and save the
+	result as LastChristmasEcho.wav:
+
+	addecho -d 6900 -v 2 LastChristmas.wav LastChristmasEcho.wav
+
+	To add an echo effect with delay of 4200 samples and a volume scale of 3 to ClubTropicana.wav and save the
+	result as ctEcho.wav:
+
+	addecho -d 4200 -v 3 ClubTropicana.wav ctEcho.wav
+
+WARNINGS
+	The program is designed to work with mono WAV audio files. Using stereo or other file formats may result in 
+	unintended behaviour.	
+	
+	Large delay values or large volume scaling may produce unintended results or distortions in the resulting 
+	audio file.
+
+	The inputted values for volume and delay must be greater than 0.
+
+BUGS
+	In some cases, if the delay value is larger than the length of the inputted audio file, the echo effect may not
+	be audible.
