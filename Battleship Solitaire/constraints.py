@@ -195,30 +195,3 @@ class IfAllThenOneConstraint(Constraint):
         self._rs = right_side
         self._lv = left_values
         self._rv = right_values
-
-class OrConstraint(Constraint):
-    """
-    A constraint that is satisfied if any of the variables in the scope is not assigned or has a desired value.
-    """
-    def __init__(self, constraint_name: str, variables: Set[Variable], desired_value: any):
-        super().__init__(constraint_name, variables)
-        self._name = "Or" + constraint_name
-        self._desired_value = desired_value
-
-    def is_satisfied(self) -> bool:
-        return any(
-            not var.isAssigned() or var.getValue() == self._desired_value
-            for var in self.scope()
-        )
-
-    def check(self):
-        return self.is_satisfied()
-
-    def hasSupport(self, var: Variable, val) -> bool:
-        if var not in self.scope() or val == self._desired_value:
-            return True
-
-        return any(
-            other_var != var and other_var.inCurDomain(self._desired_value)
-            for other_var in self.scope()
-        )
